@@ -8,8 +8,9 @@ from django_mope.signals import payment_request_complete, payment_requested_crea
 _mope = Mope(token=settings.MOPE_API_TOKEN)
 
 
-def create_payment_request(amount, currency, order_id,
-                           redirect_url, user_id=None, description=None):
+def create_payment_request(amount, currency,
+                           order_id, redirect_url,
+                           description, user_id=None):
     response = _mope.shop.create_payment_request(
         amount=amount,
         order_id=order_id,
@@ -25,7 +26,10 @@ def create_payment_request(amount, currency, order_id,
         payment_request_id=response.id,
     )
 
-    payment_requested_created.send(sender=MopePaymentRequest, instance=request)
+    payment_requested_created.send(
+        sender=MopePaymentRequest,
+        instance=request,
+    )
     return request
 
 
@@ -44,7 +48,10 @@ def update_payment_request(payment_request_id):
 
         request.completed = True
         request.save()
-        payment_request_complete.send(sender=MopePaymentRequest, instance=request)
+        payment_request_complete.send(
+            sender=MopePaymentRequest,
+            instance=request,
+        )
         return request
     except (MopePaymentRequest.DoesNotExist, HTTPError):
         return None
